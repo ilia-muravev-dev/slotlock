@@ -4,8 +4,9 @@ import { CONFIG, type Config } from '../config';
 
 export const HOLDS_QUEUE = 'holds';
 export const NOTIFICATIONS_QUEUE = 'notifications';
+export const OUTBOX_QUEUE = 'outbox';
 
-/** BullMQ on the configured Redis; both queues are registered once, here, for API and worker. */
+/** BullMQ on the configured Redis; the queues are registered once, here, for API and worker. */
 @Global()
 @Module({
   imports: [
@@ -16,7 +17,11 @@ export const NOTIFICATIONS_QUEUE = 'notifications';
         defaultJobOptions: { removeOnComplete: 1000, removeOnFail: 5000 },
       }),
     }),
-    BullModule.registerQueue({ name: HOLDS_QUEUE }, { name: NOTIFICATIONS_QUEUE }),
+    BullModule.registerQueue(
+      { name: HOLDS_QUEUE },
+      { name: NOTIFICATIONS_QUEUE },
+      { name: OUTBOX_QUEUE },
+    ),
   ],
   exports: [BullModule],
 })

@@ -10,6 +10,7 @@ import {
 import { retryOnConflict } from '../common/retry';
 import { CONFIG, type Config } from '../config';
 import type { Booking } from '../generated/prisma/client';
+import { OutboxService } from '../outbox/outbox.service';
 import { PAYMENT_PROVIDER, type PaymentProvider } from '../payments/payment.provider';
 import { PrismaService } from '../prisma/prisma.service';
 import type { BookingOut, CreateBooking, CreatedBooking } from './bookings.dto';
@@ -32,6 +33,7 @@ export class BookingsService {
     @Inject(CLOCK) private readonly clock: Clock,
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
     private readonly holds: HoldScheduler,
+    private readonly outbox: OutboxService,
     private readonly logger: Logger,
   ) {}
 
@@ -73,9 +75,19 @@ export class BookingsService {
       throw new PaymentProviderError(error);
     }
     const booking = await retryOnConflict(() =>
-      this.prisma.booking.update({
-        where: { id: held.id },
-        data: { paymentId: intent.id, amountCents },
+      this.prisma.$transaction(async (tx) => {
+        const updated = await tx.booking.update({
+          where: { id: held.id },
+          data: { paymentId: intent.id, amountCents },
+        });
+        await this.outbox.enqueue(tx, 'booking.held', {
+          bookingId: held.id,
+          userId,
+          resourceId: resource.id,
+          amountCents,
+          holdExpiresAt: updated.holdExpiresAt?.toISOString() ?? null,
+        });
+        return updated;
       }),
     );
     if (booking.holdExpiresAt) await this.holds.schedule(booking.id, booking.holdExpiresAt, now);
@@ -111,6 +123,14 @@ export class BookingsService {
           where: { id },
           data: { status: 'CANCELLED', version: { increment: 1 } },
         });
+        await this.outbox.enqueue(tx, 'booking.cancelled', { bookingId: id, userId, by: 'user' });
+        if (row.status === 'CONFIRMED' && row.paymentId) {
+          await this.outbox.enqueue(tx, 'payment.refund_requested', {
+            bookingId: id,
+            paymentId: row.paymentId,
+            reason: 'cancelled_after_payment',
+          });
+        }
         return row;
       }),
     );

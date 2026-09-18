@@ -2,6 +2,7 @@ import { Inject, Module, OnModuleInit } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import Stripe from 'stripe';
 import { CONFIG, type Config } from '../config';
+import { OutboxModule } from '../outbox/outbox.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { FakePaymentProvider } from './fake.provider';
 import { FakePspController } from './fake-psp.controller';
@@ -15,6 +16,7 @@ import { WebhooksController } from './webhooks.controller';
  * path either way. The fake PSP's endpoint answers 404 under Stripe.
  */
 @Module({
+  imports: [OutboxModule],
   controllers: [WebhooksController, FakePspController],
   providers: [
     PaymentEventsService,

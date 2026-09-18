@@ -4,6 +4,7 @@ import type { Tx } from '../bookings/strategies/reserve.strategy';
 import { PG, pgCode } from '../common/errors';
 import { retryOnConflict } from '../common/retry';
 import type { BookingStatus, PaymentEventOutcome } from '../generated/prisma/enums';
+import { OutboxService } from '../outbox/outbox.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ProviderEvent } from './payment.provider';
 
@@ -23,7 +24,10 @@ export interface AppliedEvent {
  */
 @Injectable()
 export class PaymentEventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly outbox: OutboxService,
+  ) {}
 
   async apply(event: ProviderEvent): Promise<AppliedEvent> {
     try {
@@ -68,6 +72,14 @@ export class PaymentEventsService {
       return { outcome: 'STALE', bookingId: booking.id, status: booking.status };
     }
     const decision = onPayment(booking.status, signal);
+    if (decision.outcome === 'ORPHANED') {
+      await this.outbox.enqueue(tx, 'payment.orphaned', {
+        bookingId: booking.id,
+        paymentId: event.paymentId,
+        eventId: event.id,
+        reason: `paid_while_${booking.status.toLowerCase()}`,
+      });
+    }
     if (decision.outcome !== 'APPLIED') {
       return { outcome: decision.outcome, bookingId: booking.id, status: booking.status };
     }
@@ -80,6 +92,11 @@ export class PaymentEventsService {
         version: { increment: 1 },
       },
     });
+    await this.outbox.enqueue(
+      tx,
+      decision.next === 'CONFIRMED' ? 'booking.confirmed' : 'booking.cancelled',
+      { bookingId: booking.id, paymentId: event.paymentId, by: 'payment', eventId: event.id },
+    );
     return { outcome: 'APPLIED', bookingId: booking.id, status: decision.next };
   }
 }

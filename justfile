@@ -31,9 +31,9 @@ api:
 worker:
     pnpm dev:worker
 
-# Lint, types, unit + integration tests (integration needs Docker)
+# Lint, types, migration drift, unit + integration tests (integration needs Docker)
 check:
-    pnpm lint && pnpm typecheck && pnpm test
+    pnpm lint && pnpm typecheck && pnpm prisma validate && pnpm prisma:drift && pnpm test
 
 # Fix what Biome can fix
 fix:

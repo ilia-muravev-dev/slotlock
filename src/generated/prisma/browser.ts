@@ -17,4 +17,33 @@ import * as Prisma from './internal/prismaNamespaceBrowser.js'
 export { Prisma }
 export * as $Enums from './enums.js'
 export * from './enums.js';
-
+/**
+ * Model Resource
+ * A bookable thing: a meeting room (exclusive) or a pool of hot desks (capacity N).
+ */
+export type Resource = Prisma.ResourceModel
+/**
+ * Model Booking
+ * 
+ */
+export type Booking = Prisma.BookingModel
+/**
+ * Model IdempotencyKey
+ * One row per Idempotency-Key: in flight while the request runs, then the stored response.
+ */
+export type IdempotencyKey = Prisma.IdempotencyKeyModel
+/**
+ * Model PaymentEvent
+ * Every payment webhook received, by provider event id; the outcome records what was done with it.
+ */
+export type PaymentEvent = Prisma.PaymentEventModel
+/**
+ * Model OutboxEvent
+ * Domain events written in the same transaction as the change they describe.
+ */
+export type OutboxEvent = Prisma.OutboxEventModel
+/**
+ * Model ProcessedJob
+ * Idempotent consumers: a job key is processed at most once.
+ */
+export type ProcessedJob = Prisma.ProcessedJobModel

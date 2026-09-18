@@ -12,12 +12,24 @@ concurrency:
 env:
   # prisma.config.ts resolves these even for `generate`; the tests use Testcontainers instead.
   DATABASE_URL: postgresql://slotlock:slotlock@localhost:5432/slotlock
+  SHADOW_DATABASE_URL: postgresql://slotlock:slotlock@localhost:5433/slotlock_shadow
   REDIS_URL: redis://localhost:6379/0
 
 jobs:
   check:
     name: Biome, tsc, Prisma, Vitest (unit + integration)
     runs-on: ubuntu-latest
+    services:
+      shadow:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: slotlock
+          POSTGRES_PASSWORD: slotlock
+          POSTGRES_DB: slotlock_shadow
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U slotlock" --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -30,4 +42,6 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm prisma validate
+      - name: Migrations and schema agree (no drift)
+        run: pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
       - run: pnpm test -- --coverage

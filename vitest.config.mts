@@ -11,14 +11,25 @@ export default defineConfig({
     }),
   ],
   test: {
-    include: ['test/**/*.test.ts'],
     environment: 'node',
-    testTimeout: 60_000,
-    hookTimeout: 120_000,
     coverage: {
       provider: 'v8',
       include: ['src/**'],
       exclude: ['src/generated/**', 'src/main.ts', 'src/worker.ts'],
     },
+    projects: [
+      { extends: true, test: { name: 'unit', include: ['test/unit/**/*.test.ts'] } },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          include: ['test/integration/**/*.test.ts', 'test/property/**/*.test.ts'],
+          globalSetup: ['test/integration/global-setup.ts'],
+          testTimeout: 60_000,
+          hookTimeout: 180_000,
+          fileParallelism: false,
+        },
+      },
+    ],
   },
 });

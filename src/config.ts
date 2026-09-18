@@ -7,23 +7,33 @@ export const STRATEGIES = [
   'optimistic',
   'serializable',
   'exclusion',
+  'naive',
 ] as const;
 export type Strategy = (typeof STRATEGIES)[number];
 
-const schema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(3000),
-  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'silent']).default('info'),
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string().url().default('redis://localhost:6379/0'),
-  BOOKING_STRATEGY: z.enum(STRATEGIES).default('advisory'),
-  HOLD_TTL_SECONDS: z.coerce.number().int().positive().default(600),
-  STRIPE_SECRET_KEY: z
-    .string()
-    .optional()
-    .transform((v) => (v ? v : undefined)),
-  STRIPE_WEBHOOK_SECRET: z.string().min(8).default('whsec_slotlock_dev'),
-});
+/** The five that are safe; `naive` is the bug itself, kept as a control for tests and benchmarks. */
+export const SAFE_STRATEGIES = STRATEGIES.filter((s) => s !== 'naive');
+
+const schema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    PORT: z.coerce.number().int().positive().default(3000),
+    LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'silent']).default('info'),
+    DATABASE_URL: z.string().url(),
+    DATABASE_POOL_SIZE: z.coerce.number().int().positive().default(20),
+    REDIS_URL: z.string().url().default('redis://localhost:6379/0'),
+    BOOKING_STRATEGY: z.enum(STRATEGIES).default('advisory'),
+    HOLD_TTL_SECONDS: z.coerce.number().int().positive().default(600),
+    STRIPE_SECRET_KEY: z
+      .string()
+      .optional()
+      .transform((v) => (v ? v : undefined)),
+    STRIPE_WEBHOOK_SECRET: z.string().min(8).default('whsec_slotlock_dev'),
+  })
+  .refine((c) => !(c.NODE_ENV === 'production' && c.BOOKING_STRATEGY === 'naive'), {
+    message: 'BOOKING_STRATEGY=naive double-books by design and is refused in production',
+    path: ['BOOKING_STRATEGY'],
+  });
 
 export type Config = z.infer<typeof schema>;
 

@@ -24,6 +24,10 @@ so the other four are measured without it. Pools (capacity N) always use `adviso
 exclusion strategy, and the results table says so. The benchmark (`bench/`) runs the same k6 race
 against each and the README shows the numbers side by side.
 
+A sixth, `naive`, is the bug itself — check, then insert, nothing holding the two together. It is
+kept as the control: the race test proves it double-books and the benchmark shows what "no
+locking" costs in correctness, not just in latency. The configuration refuses it in production.
+
 ## Consequences
 
 - One code path per strategy, one integration test parametrised over all five, one benchmark.

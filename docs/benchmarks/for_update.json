@@ -1,0 +1,32 @@
+{
+  "strategy": "for_update",
+  "at": "2026-09-18T18:57:33.657Z",
+  "commit": "2b1bbff",
+  "machine": "Apple M1 Pro (8 cores, 16 GB), darwin arm64",
+  "node": "v24.21.0",
+  "postgres": "PostgreSQL 17.11",
+  "poolSize": 20,
+  "vus": 100,
+  "duration": "20s",
+  "releaseRatio": 0.8,
+  "requests": 28184,
+  "rps": 1406.5607294472652,
+  "created": 1062,
+  "conflict": 26261,
+  "failed": 0,
+  "latencyMs": {
+    "p50": 66.915,
+    "p95": 91.949,
+    "p99": 138.81652,
+    "max": 331.966,
+    "avg": 70.7439638033893
+  },
+  "reserve": null,
+  "verdict": {
+    "bookings": 1062,
+    "activeNow": 201,
+    "overlaps": 0,
+    "overCapacity": 0,
+    "ok": true
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "strategy": "serializable",
+  "at": "2026-09-18T18:58:16.919Z",
+  "commit": "2b1bbff",
+  "machine": "Apple M1 Pro (8 cores, 16 GB), darwin arm64",
+  "node": "v24.21.0",
+  "postgres": "PostgreSQL 17.11",
+  "poolSize": 20,
+  "vus": 100,
+  "duration": "20s",
+  "releaseRatio": 0.8,
+  "requests": 30205,
+  "rps": 1507.932383323451,
+  "created": 981,
+  "conflict": 28437,
+  "failed": 9,
+  "latencyMs": {
+    "p50": 59.967,
+    "p95": 80.74369999999996,
+    "p99": 174.40641999999983,
+    "max": 2066.647,
+    "avg": 65.94042199340734
+  },
+  "reserve": {
+    "attempts": 30371,
+    "retries": 944
+  },
+  "verdict": {
+    "bookings": 981,
+    "activeNow": 203,
+    "overlaps": 0,
+    "overCapacity": 0,
+    "ok": true
+  }
+}

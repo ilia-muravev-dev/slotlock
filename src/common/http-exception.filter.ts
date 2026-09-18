@@ -22,10 +22,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = host.switchToHttp().getRequest<FastifyRequest>();
     const { status, body } = toErrorResponse(exception);
     if (status >= 500) {
-      this.logger.error(
-        { err: exception, method: request.method, url: request.url },
-        'unhandled error',
-      );
+      if (exception instanceof HttpException) {
+        this.logger.warn(
+          { code: body.code, method: request.method, url: request.url },
+          body.message,
+        );
+      } else {
+        this.logger.error(
+          { err: exception, method: request.method, url: request.url },
+          'unhandled error',
+        );
+      }
     }
     reply.status(status).send(body);
   }

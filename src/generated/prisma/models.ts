@@ -8,11 +8,11 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Resource.js'
-export type * from './models/Booking.js'
-export type * from './models/IdempotencyKey.js'
-export type * from './models/PaymentEvent.js'
-export type * from './models/OutboxEvent.js'
-export type * from './models/ProcessedJob.js'
-export type * from './models/FakePaymentIntent.js'
-export type * from './commonInputTypes.js'
+export type * from './models/Resource'
+export type * from './models/Booking'
+export type * from './models/IdempotencyKey'
+export type * from './models/PaymentEvent'
+export type * from './models/OutboxEvent'
+export type * from './models/ProcessedJob'
+export type * from './models/FakePaymentIntent'
+export type * from './commonInputTypes'

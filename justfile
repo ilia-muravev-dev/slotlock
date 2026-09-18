@@ -38,3 +38,15 @@ check:
 # Fix what Biome can fix
 fix:
     pnpm lint:fix
+
+# k6 race against one strategy (needs `brew install k6`, `just up`, `just migrate`); report in docs/benchmarks/
+bench strategy:
+    pnpm bench {{strategy}}
+
+# All six strategies, then the comparison table docs/benchmarks/README.md
+bench-all:
+    pnpm bench all
+
+# Judge the current database: overlaps and over-capacity pools
+verify:
+    pnpm bench:verify

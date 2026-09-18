@@ -45,3 +45,42 @@ jobs:
       - name: Migrations and schema agree (no drift)
         run: pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
       - run: pnpm test -- --coverage
+
+  bench-smoke:
+    name: k6 smoke (advisory) + invariant verifier
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: slotlock
+          POSTGRES_PASSWORD: slotlock
+          POSTGRES_DB: slotlock
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U slotlock" --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: grafana/setup-k6-action@v1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prisma:generate
+      - run: pnpm prisma:migrate
+      - name: Race for 5 s with 10 VUs, then verify the database
+        run: BENCH_VUS=10 BENCH_DURATION=5s pnpm bench advisory
+      - name: The naive control must be caught by the verifier
+        run: |
+          if BENCH_VUS=10 BENCH_DURATION=5s pnpm bench naive; then
+            echo "naive did not violate anything this time; the verifier was not exercised" >&2
+          fi

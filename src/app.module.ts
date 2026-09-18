@@ -1,5 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
+import { BookingsModule } from './bookings/bookings.module';
 import { CONFIG, type Config } from './config';
 import { ConfigModule } from './config.module';
 import { HealthController } from './health/health.controller';
@@ -26,6 +27,7 @@ export class AppModule {
         }),
         PrismaModule,
         ResourcesModule,
+        BookingsModule,
       ],
       controllers: [HealthController],
     };

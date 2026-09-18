@@ -3,6 +3,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/http-exception.filter';
 import { CONFIG, type Config } from './config';
 
 export async function createApp(config?: Config): Promise<NestFastifyApplication> {
@@ -12,6 +13,7 @@ export async function createApp(config?: Config): Promise<NestFastifyApplication
     { bufferLogs: true },
   );
   app.useLogger(app.get(Logger));
+  app.useGlobalFilters(new HttpExceptionFilter(app.get(Logger)));
   app.enableShutdownHooks();
 
   const document = SwaggerModule.createDocument(

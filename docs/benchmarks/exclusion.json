@@ -1,0 +1,35 @@
+{
+  "strategy": "exclusion",
+  "at": "2026-09-18T18:58:38.718Z",
+  "commit": "2b1bbff",
+  "machine": "Apple M1 Pro (8 cores, 16 GB), darwin arm64",
+  "node": "v24.21.0",
+  "postgres": "PostgreSQL 17.11",
+  "poolSize": 20,
+  "vus": 100,
+  "duration": "20s",
+  "releaseRatio": 0.8,
+  "requests": 37383,
+  "rps": 1866.6049774435046,
+  "created": 1019,
+  "conflict": 35545,
+  "failed": 0,
+  "latencyMs": {
+    "p50": 49.445,
+    "p95": 70.90764999999996,
+    "p99": 126.16062,
+    "max": 345.688,
+    "avg": 53.136770429930976
+  },
+  "reserve": {
+    "attempts": 32800,
+    "retries": 0
+  },
+  "verdict": {
+    "bookings": 1019,
+    "activeNow": 200,
+    "overlaps": 0,
+    "overCapacity": 0,
+    "ok": true
+  }
+}

@@ -20,6 +20,7 @@ const schema = z
     PORT: z.coerce.number().int().positive().default(3000),
     LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'silent']).default('info'),
     DATABASE_URL: z.string().url(),
+    DATABASE_POOL_SIZE: z.coerce.number().int().positive().default(20),
     REDIS_URL: z.string().url().default('redis://localhost:6379/0'),
     BOOKING_STRATEGY: z.enum(STRATEGIES).default('advisory'),
     HOLD_TTL_SECONDS: z.coerce.number().int().positive().default(600),

@@ -1,0 +1,11 @@
+// slotlock — see docs/adr for the reasoning behind the shape.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}

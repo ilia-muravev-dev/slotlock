@@ -25,6 +25,7 @@ const schema = z
     BOOKING_STRATEGY: z.enum(STRATEGIES).default('advisory'),
     HOLD_TTL_SECONDS: z.coerce.number().int().positive().default(600),
     HOLD_SWEEP_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
+    OUTBOX_RELAY_INTERVAL_MS: z.coerce.number().int().positive().default(2_000),
     STRIPE_SECRET_KEY: z
       .string()
       .optional()

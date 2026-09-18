@@ -9,7 +9,37 @@
 * 🟢 You can import this file directly.
 */
 
+export const ResourceKind = {
+  ROOM: 'ROOM',
+  DESK_POOL: 'DESK_POOL'
+} as const
+
+export type ResourceKind = (typeof ResourceKind)[keyof typeof ResourceKind]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const BookingStatus = {
+  HELD: 'HELD',
+  CONFIRMED: 'CONFIRMED',
+  CANCELLED: 'CANCELLED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus]
+
+
+export const IdempotencyStatus = {
+  IN_FLIGHT: 'IN_FLIGHT',
+  DONE: 'DONE'
+} as const
+
+export type IdempotencyStatus = (typeof IdempotencyStatus)[keyof typeof IdempotencyStatus]
+
+
+export const PaymentEventOutcome = {
+  APPLIED: 'APPLIED',
+  STALE: 'STALE',
+  DUPLICATE: 'DUPLICATE',
+  ORPHANED: 'ORPHANED'
+} as const
+
+export type PaymentEventOutcome = (typeof PaymentEventOutcome)[keyof typeof PaymentEventOutcome]

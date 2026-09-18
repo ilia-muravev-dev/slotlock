@@ -51,7 +51,12 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-
+  Resource: 'Resource',
+  Booking: 'Booking',
+  IdempotencyKey: 'IdempotencyKey',
+  PaymentEvent: 'PaymentEvent',
+  OutboxEvent: 'OutboxEvent',
+  ProcessedJob: 'ProcessedJob'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -68,4 +73,129 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const ResourceScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  name: 'name',
+  capacity: 'capacity',
+  priceCents: 'priceCents',
+  version: 'version',
+  createdAt: 'createdAt'
+} as const
+
+export type ResourceScalarFieldEnum = (typeof ResourceScalarFieldEnum)[keyof typeof ResourceScalarFieldEnum]
+
+
+export const BookingScalarFieldEnum = {
+  id: 'id',
+  resourceId: 'resourceId',
+  userId: 'userId',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  exclusive: 'exclusive',
+  status: 'status',
+  holdExpiresAt: 'holdExpiresAt',
+  paymentId: 'paymentId',
+  paymentLastEventAt: 'paymentLastEventAt',
+  version: 'version',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+export const IdempotencyKeyScalarFieldEnum = {
+  key: 'key',
+  userId: 'userId',
+  requestHash: 'requestHash',
+  status: 'status',
+  responseStatus: 'responseStatus',
+  responseBody: 'responseBody',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type IdempotencyKeyScalarFieldEnum = (typeof IdempotencyKeyScalarFieldEnum)[keyof typeof IdempotencyKeyScalarFieldEnum]
+
+
+export const PaymentEventScalarFieldEnum = {
+  id: 'id',
+  paymentId: 'paymentId',
+  type: 'type',
+  providerCreatedAt: 'providerCreatedAt',
+  receivedAt: 'receivedAt',
+  outcome: 'outcome'
+} as const
+
+export type PaymentEventScalarFieldEnum = (typeof PaymentEventScalarFieldEnum)[keyof typeof PaymentEventScalarFieldEnum]
+
+
+export const OutboxEventScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  payload: 'payload',
+  createdAt: 'createdAt',
+  publishedAt: 'publishedAt'
+} as const
+
+export type OutboxEventScalarFieldEnum = (typeof OutboxEventScalarFieldEnum)[keyof typeof OutboxEventScalarFieldEnum]
+
+
+export const ProcessedJobScalarFieldEnum = {
+  key: 'key',
+  processedAt: 'processedAt'
+} as const
+
+export type ProcessedJobScalarFieldEnum = (typeof ProcessedJobScalarFieldEnum)[keyof typeof ProcessedJobScalarFieldEnum]
+
+
+export const SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+} as const
+
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

@@ -9,5 +9,7 @@ export default defineConfig({
   },
   datasource: {
     url: env('DATABASE_URL'),
+    // Used by `migrate dev` and by the drift check (`migrate diff --from-migrations`).
+    shadowDatabaseUrl: env('SHADOW_DATABASE_URL'),
   },
 });

@@ -4,6 +4,7 @@ import { CONFIG, type Config } from './config';
 import { ConfigModule } from './config.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { ResourcesModule } from './resources/resources.module';
 
 @Module({})
 export class AppModule {
@@ -24,6 +25,7 @@ export class AppModule {
           }),
         }),
         PrismaModule,
+        ResourcesModule,
       ],
       controllers: [HealthController],
     };

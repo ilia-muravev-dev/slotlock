@@ -2,6 +2,7 @@ import { Inject, Module, OnModuleInit } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import Stripe from 'stripe';
 import { CONFIG, type Config } from '../config';
+import { PrismaService } from '../prisma/prisma.service';
 import { FakePaymentProvider } from './fake.provider';
 import { FakePspController } from './fake-psp.controller';
 import { PAYMENT_PROVIDER, type PaymentProvider } from './payment.provider';
@@ -19,11 +20,11 @@ import { WebhooksController } from './webhooks.controller';
     PaymentEventsService,
     {
       provide: PAYMENT_PROVIDER,
-      inject: [CONFIG],
-      useFactory: (cfg: Config): PaymentProvider =>
+      inject: [CONFIG, PrismaService],
+      useFactory: (cfg: Config, prisma: PrismaService): PaymentProvider =>
         cfg.STRIPE_SECRET_KEY
           ? new StripeProvider(new Stripe(cfg.STRIPE_SECRET_KEY), cfg.STRIPE_WEBHOOK_SECRET)
-          : new FakePaymentProvider(cfg.STRIPE_WEBHOOK_SECRET),
+          : new FakePaymentProvider(prisma, cfg.STRIPE_WEBHOOK_SECRET),
     },
   ],
   exports: [PAYMENT_PROVIDER, PaymentEventsService],

@@ -47,3 +47,8 @@ export type OutboxEvent = Prisma.OutboxEventModel
  * Idempotent consumers: a job key is processed at most once.
  */
 export type ProcessedJob = Prisma.ProcessedJobModel
+/**
+ * Model FakePaymentIntent
+ * The in-process PSP's intents, in the database so the API and the worker see the same ones.
+ */
+export type FakePaymentIntent = Prisma.FakePaymentIntentModel

@@ -24,6 +24,7 @@ const schema = z
     REDIS_URL: z.string().url().default('redis://localhost:6379/0'),
     BOOKING_STRATEGY: z.enum(STRATEGIES).default('advisory'),
     HOLD_TTL_SECONDS: z.coerce.number().int().positive().default(600),
+    HOLD_SWEEP_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
     STRIPE_SECRET_KEY: z
       .string()
       .optional()

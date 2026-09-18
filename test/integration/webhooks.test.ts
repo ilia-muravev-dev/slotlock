@@ -102,7 +102,7 @@ describe('POST /bookings creates a payment intent', () => {
 describe('POST /webhooks/payments', () => {
   it("confirms a hold when the events arrive in Stripe's order", async () => {
     const booking = await hold();
-    const events = psp.pay(booking.payment.id, 'succeeded');
+    const events = await psp.pay(booking.payment.id, 'succeeded');
     const outcomes: string[] = [];
     for (const event of events) {
       const response = await deliver(event);
@@ -118,7 +118,7 @@ describe('POST /webhooks/payments', () => {
 
   it('converges on the same state when the events arrive reversed, and a late cancel is stale', async () => {
     const booking = await hold();
-    const [created, processing, succeeded] = psp.pay(booking.payment.id, 'succeeded');
+    const [created, processing, succeeded] = await psp.pay(booking.payment.id, 'succeeded');
     if (!created || !processing || !succeeded) throw new Error('events');
     expect((await deliver(succeeded)).json()).toMatchObject({
       outcome: 'APPLIED',
@@ -151,7 +151,7 @@ describe('POST /webhooks/payments', () => {
 
   it('records a redelivered event as DUPLICATE, also when the redeliveries race', async () => {
     const booking = await hold();
-    const [, , succeeded] = psp.pay(booking.payment.id, 'succeeded');
+    const [, , succeeded] = await psp.pay(booking.payment.id, 'succeeded');
     if (!succeeded) throw new Error('events');
     const responses = await Promise.all(Array.from({ length: 10 }, () => deliver(succeeded)));
     const outcomes = responses.map((r) => r.json().outcome).sort();
@@ -163,7 +163,7 @@ describe('POST /webhooks/payments', () => {
 
   it('converges when whole sequences are delivered concurrently and shuffled', async () => {
     const booking = await hold();
-    const events = psp.pay(booking.payment.id, 'succeeded');
+    const events = await psp.pay(booking.payment.id, 'succeeded');
     const shuffled = [...events, ...events, ...events].sort(() => Math.random() - 0.5);
     const responses = await Promise.all(shuffled.map((e) => deliver(e)));
     expect(responses.every((r) => r.statusCode === 200)).toBe(true);
@@ -175,7 +175,7 @@ describe('POST /webhooks/payments', () => {
 
   it('cancels a hold on payment_intent.canceled and frees the seat', async () => {
     const booking = await hold();
-    const [, , canceled] = psp.pay(booking.payment.id, 'canceled');
+    const [, , canceled] = await psp.pay(booking.payment.id, 'canceled');
     if (!canceled) throw new Error('events');
     expect((await deliver(canceled)).json()).toMatchObject({
       outcome: 'APPLIED',
@@ -188,7 +188,7 @@ describe('POST /webhooks/payments', () => {
   it('marks money for a booking that no longer holds its seat as ORPHANED', async () => {
     const booking = await hold();
     await prisma.booking.update({ where: { id: booking.id }, data: { status: 'EXPIRED' } });
-    const [, , succeeded] = psp.pay(booking.payment.id, 'succeeded');
+    const [, , succeeded] = await psp.pay(booking.payment.id, 'succeeded');
     if (!succeeded) throw new Error('events');
     expect((await deliver(succeeded)).json()).toMatchObject({
       outcome: 'ORPHANED',

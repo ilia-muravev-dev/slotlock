@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import {
   BookingNotFoundError,
+  ForbiddenError,
+  InvalidTransitionError,
   PaymentProviderError,
   ResourceNotFoundError,
 } from '../common/errors';
@@ -10,6 +13,7 @@ import type { Booking } from '../generated/prisma/client';
 import { PAYMENT_PROVIDER, type PaymentProvider } from '../payments/payment.provider';
 import { PrismaService } from '../prisma/prisma.service';
 import type { BookingOut, CreateBooking, CreatedBooking } from './bookings.dto';
+import { HoldScheduler } from './holds/hold.scheduler';
 import { RESERVE_STRATEGY, type ReserveStrategy } from './strategies/reserve.strategy';
 
 export interface Clock {
@@ -27,6 +31,8 @@ export class BookingsService {
     @Inject(CONFIG) private readonly config: Config,
     @Inject(CLOCK) private readonly clock: Clock,
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
+    private readonly holds: HoldScheduler,
+    private readonly logger: Logger,
   ) {}
 
   get strategyName(): string {
@@ -72,6 +78,7 @@ export class BookingsService {
         data: { paymentId: intent.id, amountCents },
       }),
     );
+    if (booking.holdExpiresAt) await this.holds.schedule(booking.id, booking.holdExpiresAt, now);
     return {
       ...toBookingOut(booking),
       payment: { provider: this.payments.name, id: intent.id, clientSecret: intent.clientSecret },
@@ -82,6 +89,37 @@ export class BookingsService {
     const row = await this.prisma.booking.findUnique({ where: { id } });
     if (!row) throw new BookingNotFoundError(id);
     return toBookingOut(row);
+  }
+
+  /**
+   * The owner may cancel a HELD or CONFIRMED booking; cancelling again is a no-op. An EXPIRED
+   * booking has nothing left to cancel. A held payment intent is cancelled best effort — if the
+   * customer pays in the same instant, the webhook records the money as ORPHANED for a refund.
+   */
+  async cancel(id: string, userId: string): Promise<BookingOut> {
+    const before = await retryOnConflict(() =>
+      this.prisma.$transaction(async (tx) => {
+        const rows = await tx.$queryRaw<
+          { id: string; userId: string; status: Booking['status']; paymentId: string | null }[]
+        >`SELECT id, "userId", status, "paymentId" FROM bookings WHERE id = ${id} FOR UPDATE`;
+        const row = rows[0];
+        if (!row) throw new BookingNotFoundError(id);
+        if (row.userId !== userId) throw new ForbiddenError('only the booking owner can cancel it');
+        if (row.status === 'CANCELLED') return row;
+        if (row.status === 'EXPIRED') throw new InvalidTransitionError(row.status, 'CANCELLED');
+        await tx.booking.update({
+          where: { id },
+          data: { status: 'CANCELLED', version: { increment: 1 } },
+        });
+        return row;
+      }),
+    );
+    if (before.status === 'HELD' && before.paymentId) {
+      await this.payments.cancelIntent(before.paymentId).catch((error: unknown) => {
+        this.logger.warn({ err: error, bookingId: id }, 'could not cancel the payment intent');
+      });
+    }
+    return this.get(id);
   }
 }
 

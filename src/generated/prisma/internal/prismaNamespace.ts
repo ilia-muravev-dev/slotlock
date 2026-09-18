@@ -402,7 +402,8 @@ export const ModelName = {
   IdempotencyKey: 'IdempotencyKey',
   PaymentEvent: 'PaymentEvent',
   OutboxEvent: 'OutboxEvent',
-  ProcessedJob: 'ProcessedJob'
+  ProcessedJob: 'ProcessedJob',
+  FakePaymentIntent: 'FakePaymentIntent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -418,7 +419,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "resource" | "booking" | "idempotencyKey" | "paymentEvent" | "outboxEvent" | "processedJob"
+    modelProps: "resource" | "booking" | "idempotencyKey" | "paymentEvent" | "outboxEvent" | "processedJob" | "fakePaymentIntent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -866,6 +867,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FakePaymentIntent: {
+      payload: Prisma.$FakePaymentIntentPayload<ExtArgs>
+      fields: Prisma.FakePaymentIntentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FakePaymentIntentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FakePaymentIntentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>
+        }
+        findFirst: {
+          args: Prisma.FakePaymentIntentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FakePaymentIntentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>
+        }
+        findMany: {
+          args: Prisma.FakePaymentIntentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>[]
+        }
+        create: {
+          args: Prisma.FakePaymentIntentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>
+        }
+        createMany: {
+          args: Prisma.FakePaymentIntentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FakePaymentIntentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>[]
+        }
+        delete: {
+          args: Prisma.FakePaymentIntentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>
+        }
+        update: {
+          args: Prisma.FakePaymentIntentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>
+        }
+        deleteMany: {
+          args: Prisma.FakePaymentIntentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FakePaymentIntentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FakePaymentIntentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>[]
+        }
+        upsert: {
+          args: Prisma.FakePaymentIntentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FakePaymentIntentPayload>
+        }
+        aggregate: {
+          args: Prisma.FakePaymentIntentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFakePaymentIntent>
+        }
+        groupBy: {
+          args: Prisma.FakePaymentIntentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FakePaymentIntentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FakePaymentIntentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FakePaymentIntentCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -981,6 +1056,17 @@ export const ProcessedJobScalarFieldEnum = {
 } as const
 
 export type ProcessedJobScalarFieldEnum = (typeof ProcessedJobScalarFieldEnum)[keyof typeof ProcessedJobScalarFieldEnum]
+
+
+export const FakePaymentIntentScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  amountCents: 'amountCents',
+  status: 'status',
+  createdAt: 'createdAt'
+} as const
+
+export type FakePaymentIntentScalarFieldEnum = (typeof FakePaymentIntentScalarFieldEnum)[keyof typeof FakePaymentIntentScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1326,6 +1412,7 @@ export type GlobalOmitConfig = {
   paymentEvent?: Prisma.PaymentEventOmit
   outboxEvent?: Prisma.OutboxEventOmit
   processedJob?: Prisma.ProcessedJobOmit
+  fakePaymentIntent?: Prisma.FakePaymentIntentOmit
 }
 
 /* Types for Logging */

@@ -56,7 +56,8 @@ export const ModelName = {
   IdempotencyKey: 'IdempotencyKey',
   PaymentEvent: 'PaymentEvent',
   OutboxEvent: 'OutboxEvent',
-  ProcessedJob: 'ProcessedJob'
+  ProcessedJob: 'ProcessedJob',
+  FakePaymentIntent: 'FakePaymentIntent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -151,6 +152,17 @@ export const ProcessedJobScalarFieldEnum = {
 } as const
 
 export type ProcessedJobScalarFieldEnum = (typeof ProcessedJobScalarFieldEnum)[keyof typeof ProcessedJobScalarFieldEnum]
+
+
+export const FakePaymentIntentScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  amountCents: 'amountCents',
+  status: 'status',
+  createdAt: 'createdAt'
+} as const
+
+export type FakePaymentIntentScalarFieldEnum = (typeof FakePaymentIntentScalarFieldEnum)[keyof typeof FakePaymentIntentScalarFieldEnum]
 
 
 export const SortOrder = {

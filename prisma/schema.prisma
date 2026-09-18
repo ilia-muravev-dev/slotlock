@@ -122,3 +122,14 @@ model ProcessedJob {
 
   @@map("processed_jobs")
 }
+
+/// The in-process PSP's intents, in the database so the API and the worker see the same ones.
+model FakePaymentIntent {
+  id          String   @id
+  bookingId   String
+  amountCents Int
+  status      String
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@map("fake_payment_intents")
+}

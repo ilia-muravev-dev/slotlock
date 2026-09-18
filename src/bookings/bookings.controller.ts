@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -60,5 +62,18 @@ export class BookingsController {
   @ApiOkResponse({ description: 'One booking.' })
   get(@Param('id') id: string): Promise<BookingOut> {
     return this.bookings.get(id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Cancel a held or confirmed booking (owner only; idempotent)' })
+  @ApiHeader({ name: 'X-User-Id', required: true })
+  @ApiOkResponse({ description: 'The booking, now CANCELLED.' })
+  @ApiConflictResponse({
+    description: 'invalid_transition: an EXPIRED booking cannot be cancelled.',
+  })
+  cancel(@Param('id') id: string, @Headers('x-user-id') userId: string): Promise<BookingOut> {
+    if (!userId)
+      throw new BadRequestException({ code: 'user_required', message: 'send an X-User-Id header' });
+    return this.bookings.cancel(id, userId);
   }
 }

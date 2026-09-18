@@ -2,6 +2,7 @@ import {
   BadGatewayException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   HttpException,
   NotFoundException,
   ServiceUnavailableException,
@@ -68,6 +69,12 @@ export class PaymentProviderError extends BadGatewayException {
       code: 'payment_provider_unavailable',
       message: `payment provider failed: ${cause instanceof Error ? cause.message : String(cause)}`,
     });
+  }
+}
+
+export class ForbiddenError extends ForbiddenException {
+  constructor(what: string) {
+    super({ code: 'forbidden', message: what });
   }
 }
 

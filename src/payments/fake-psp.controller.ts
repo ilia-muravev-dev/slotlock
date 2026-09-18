@@ -45,7 +45,10 @@ export class FakePspController {
     if (!(this.provider instanceof FakePaymentProvider)) {
       throw new NotFoundException({ code: 'not_found', message: 'the fake PSP is not active' });
     }
-    const events = order(this.provider.pay(paymentId, body.outcome as FakeOutcome), body.order);
+    const events = order(
+      await this.provider.pay(paymentId, body.outcome as FakeOutcome),
+      body.order,
+    );
     if (body.duplicate) {
       const last = events.find((e) => e.type === `payment_intent.${body.outcome}`);
       if (last) events.push(last);

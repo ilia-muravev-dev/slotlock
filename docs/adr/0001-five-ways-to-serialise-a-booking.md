@@ -30,6 +30,16 @@ locking" costs in correctness, not just in latency. The configuration refuses it
 
 ## Consequences
 
+- The exclusion strategy must insert with `ON CONFLICT ON CONSTRAINT … DO NOTHING`. A plain
+  insert is checked *after* its index entry is written, so N concurrent inserts for one slot find
+  each other's uncommitted rows, wait on each other, and are unpicked by the deadlock detector one
+  `deadlock_timeout` (1 s) at a time — the first version of this repository answered the 50-way
+  race with no 201 at all. Speculative insertion pre-checks before writing, so a committed winner
+  makes the losers' inserts return no row, and nothing deadlocks.
+- The constraint is also rechecked on every non-HOT update of a booking row (attaching the payment
+  id, confirming), and that check waits on in-flight inserts for the same slot; what follows a
+  reserve runs through `retryOnConflict` in case the detector picks it as the victim.
+
 - One code path per strategy, one integration test parametrised over all five, one benchmark.
 - Production would pick one (`advisory` by default); the others stay as living documentation of
   the trade-offs, which is the point of the repository.

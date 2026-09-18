@@ -41,39 +41,41 @@ describe('ExclusionStrategy', () => {
 
   it('delegates pools to the advisory strategy because a constraint cannot count to N', async () => {
     const advisory = { reserve: vi.fn().mockResolvedValue({ id: 'b' }) };
-    const prisma = { booking: { create: vi.fn() } };
+    const prisma = { $queryRaw: vi.fn() };
     const strategy = new ExclusionStrategy(prisma as never, advisory as never);
     await strategy.reserve(input(false));
     expect(advisory.reserve).toHaveBeenCalledOnce();
-    expect(prisma.booking.create).not.toHaveBeenCalled();
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
   });
 
-  it('turns the constraint violation into a 409 no_capacity', async () => {
+  it('turns an insert that returned no row (ON CONFLICT DO NOTHING) into a 409 no_capacity', async () => {
     const advisory = { reserve: vi.fn() };
-    const violation = Object.assign(
-      new Error('conflicting key value violates exclusion constraint "booking_no_overlap"'),
-      { code: 'P2010', meta: { code: '23P01' } },
-    );
-    const prisma = { booking: { create: vi.fn().mockRejectedValue(violation) } };
+    const prisma = { $queryRaw: vi.fn().mockResolvedValue([]) };
     const strategy = new ExclusionStrategy(prisma as never, advisory as never);
     await expect(strategy.reserve(input(true))).rejects.toMatchObject({ status: 409 });
     expect(advisory.reserve).not.toHaveBeenCalled();
   });
 
-  it('retries a deadlock victim, which then sees the winner and gets its 409', async () => {
-    const deadlock = Object.assign(new Error('deadlock detected'), {
+  it('retries a serialization victim and gives up with a 503 eventually', async () => {
+    const conflict = Object.assign(new Error('deadlock detected'), {
       cause: { kind: 'TransactionWriteConflict' },
     });
-    const violation = Object.assign(new Error('23P01'), {
-      cause: { kind: 'postgres', code: '23P01' },
-    });
-    const create = vi.fn().mockRejectedValueOnce(deadlock).mockRejectedValueOnce(violation);
+    const queryRaw = vi
+      .fn()
+      .mockRejectedValueOnce(conflict)
+      .mockResolvedValueOnce([{ id: 'b' }]);
     const strategy = new ExclusionStrategy(
-      { booking: { create } } as never,
+      { $queryRaw: queryRaw } as never,
       { reserve: vi.fn() } as never,
     );
-    await expect(strategy.reserve(input(true))).rejects.toMatchObject({ status: 409 });
-    expect(create).toHaveBeenCalledTimes(2);
-    expect(strategy.deadlocks).toBe(1);
+    await expect(strategy.reserve(input(true))).resolves.toMatchObject({ id: 'b' });
+    expect(queryRaw).toHaveBeenCalledTimes(2);
+    expect(strategy.retries).toBe(1);
+
+    const exhausted = new ExclusionStrategy(
+      { $queryRaw: vi.fn().mockRejectedValue(conflict) } as never,
+      { reserve: vi.fn() } as never,
+    );
+    await expect(exhausted.reserve(input(true))).rejects.toMatchObject({ status: 503 });
   });
 });

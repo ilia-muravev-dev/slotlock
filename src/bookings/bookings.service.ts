@@ -4,6 +4,7 @@ import {
   PaymentProviderError,
   ResourceNotFoundError,
 } from '../common/errors';
+import { retryOnConflict } from '../common/retry';
 import { CONFIG, type Config } from '../config';
 import type { Booking } from '../generated/prisma/client';
 import { PAYMENT_PROVIDER, type PaymentProvider } from '../payments/payment.provider';
@@ -60,15 +61,17 @@ export class BookingsService {
         currency: this.config.PAYMENT_CURRENCY,
       });
     } catch (error) {
-      await this.prisma.booking
-        .update({ where: { id: held.id }, data: { status: 'CANCELLED' } })
-        .catch(() => undefined); // if this fails too, the hold expires on its own
+      await retryOnConflict(() =>
+        this.prisma.booking.update({ where: { id: held.id }, data: { status: 'CANCELLED' } }),
+      ).catch(() => undefined); // if this fails too, the hold expires on its own
       throw new PaymentProviderError(error);
     }
-    const booking = await this.prisma.booking.update({
-      where: { id: held.id },
-      data: { paymentId: intent.id, amountCents },
-    });
+    const booking = await retryOnConflict(() =>
+      this.prisma.booking.update({
+        where: { id: held.id },
+        data: { paymentId: intent.id, amountCents },
+      }),
+    );
     return {
       ...toBookingOut(booking),
       payment: { provider: this.payments.name, id: intent.id, clientSecret: intent.clientSecret },

@@ -1,40 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import {
-  isRetryableConflict,
-  NoCapacityError,
-  PG,
-  pgCode,
-  RetryExhaustedError,
-} from '../../common/errors';
+import { isRetryableConflict, NoCapacityError, RetryExhaustedError } from '../../common/errors';
+import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AdvisoryStrategy } from './advisory.strategy';
-import {
-  insertHeld,
-  type ReservedBooking,
-  type ReserveInput,
-  type ReserveStrategy,
-} from './reserve.strategy';
+import type { ReservedBooking, ReserveInput, ReserveStrategy } from './reserve.strategy';
 
 export const EXCLUSION_CONSTRAINT = 'booking_no_overlap';
+const EXCLUSION_CONSTRAINT_SQL = Prisma.raw(EXCLUSION_CONSTRAINT);
 
 /**
  * Let the database say no: a GiST exclusion constraint rejects an overlapping active booking on an
- * exclusive resource, so the insert simply fails with 23P01. "At most N" cannot be expressed this
- * way, so pools use the advisory strategy underneath.
+ * exclusive resource. "At most N" cannot be expressed this way, so pools use the advisory strategy
+ * underneath.
  *
- * The insert is a single autocommit statement rather than an interactive transaction. Postgres
- * checks an exclusion constraint after inserting the index entry, so two concurrent inserters can
- * each find the other's uncommitted row and wait on each other; the deadlock detector then aborts
- * one of them with 40P01 (after deadlock_timeout, 1 s by default), and that one retries and gets
- * its 23P01. A client-side transaction timeout would only add a way to lose the row that would
- * have won.
+ * The insert is `ON CONFLICT ON CONSTRAINT … DO NOTHING`, not a plain insert that fails with
+ * 23P01. Postgres checks an exclusion constraint after it has inserted the index entry, so N
+ * plain inserts for the same slot each find the others' uncommitted rows and wait on each other;
+ * the deadlock detector then unpicks them one `deadlock_timeout` (1 s) at a time, and retrying
+ * victims re-enter the fight. `ON CONFLICT` uses speculative insertion: the pre-check waits for
+ * in-flight rows before inserting anything, so there is nothing to deadlock on, and a committed
+ * winner simply makes the insert return no row.
  */
 @Injectable()
 export class ExclusionStrategy implements ReserveStrategy {
   readonly name = 'exclusion' as const;
   static readonly MAX_ATTEMPTS = 5;
   attempts = 0;
-  deadlocks = 0;
+  retries = 0;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -46,14 +38,21 @@ export class ExclusionStrategy implements ReserveStrategy {
     for (let attempt = 0; ; attempt += 1) {
       this.attempts += 1;
       try {
-        return await insertHeld(this.prisma, input);
+        const rows = await this.prisma.$queryRaw<ReservedBooking[]>`
+          INSERT INTO bookings
+            ("id", "resourceId", "userId", "startsAt", "endsAt", "exclusive", "status",
+             "holdExpiresAt", "createdAt", "updatedAt")
+          VALUES
+            (gen_random_uuid()::text, ${input.resource.id}, ${input.userId}, ${input.startsAt},
+             ${input.endsAt}, true, 'HELD'::"BookingStatus", ${input.holdExpiresAt}, now(), now())
+          ON CONFLICT ON CONSTRAINT ${EXCLUSION_CONSTRAINT_SQL} DO NOTHING
+          RETURNING "id", "resourceId", "userId", "startsAt", "endsAt", "status", "holdExpiresAt"`;
+        const booking = rows[0];
+        if (!booking) throw new NoCapacityError(input.resource.id);
+        return booking;
       } catch (error) {
-        const code = pgCode(error);
-        if (code === PG.exclusionViolation || String(error).includes(EXCLUSION_CONSTRAINT)) {
-          throw new NoCapacityError(input.resource.id);
-        }
         if (!isRetryableConflict(error)) throw error;
-        this.deadlocks += 1;
+        this.retries += 1;
         if (attempt + 1 >= ExclusionStrategy.MAX_ATTEMPTS) {
           throw new RetryExhaustedError(this.name, ExclusionStrategy.MAX_ATTEMPTS);
         }

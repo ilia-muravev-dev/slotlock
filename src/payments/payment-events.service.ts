@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { onPayment, signalOf } from '../bookings/booking.state';
 import type { Tx } from '../bookings/strategies/reserve.strategy';
 import { PG, pgCode } from '../common/errors';
+import { retryOnConflict } from '../common/retry';
 import type { BookingStatus, PaymentEventOutcome } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ProviderEvent } from './payment.provider';
@@ -26,28 +27,32 @@ export class PaymentEventsService {
 
   async apply(event: ProviderEvent): Promise<AppliedEvent> {
     try {
-      return await this.prisma.$transaction(async (tx) => {
-        const booking = event.paymentId ? await lockBooking(tx, event.paymentId) : null;
-        if (await tx.paymentEvent.findUnique({ where: { id: event.id } })) {
-          return { outcome: 'DUPLICATE' };
-        }
-        const result = await this.decide(tx, event, booking);
-        await tx.paymentEvent.create({
-          data: {
-            id: event.id,
-            paymentId: event.paymentId ?? null,
-            type: event.type,
-            providerCreatedAt: event.createdAt,
-            outcome: result.outcome,
-          },
-        });
-        return result;
-      });
+      return await retryOnConflict(() => this.transaction(event));
     } catch (error) {
       // two deliveries of one event racing on a booking-less payment collide on the primary key
       if (pgCode(error) === PG.uniqueViolation) return { outcome: 'DUPLICATE' };
       throw error;
     }
+  }
+
+  private transaction(event: ProviderEvent): Promise<AppliedEvent> {
+    return this.prisma.$transaction(async (tx) => {
+      const booking = event.paymentId ? await lockBooking(tx, event.paymentId) : null;
+      if (await tx.paymentEvent.findUnique({ where: { id: event.id } })) {
+        return { outcome: 'DUPLICATE' };
+      }
+      const result = await this.decide(tx, event, booking);
+      await tx.paymentEvent.create({
+        data: {
+          id: event.id,
+          paymentId: event.paymentId ?? null,
+          type: event.type,
+          providerCreatedAt: event.createdAt,
+          outcome: result.outcome,
+        },
+      });
+      return result;
+    });
   }
 
   private async decide(

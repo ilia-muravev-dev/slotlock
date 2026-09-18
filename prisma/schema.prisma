@@ -32,6 +32,8 @@ enum PaymentEventOutcome {
   STALE
   DUPLICATE
   ORPHANED
+  IGNORED
+  UNKNOWN
 }
 
 /// A bookable thing: a meeting room (exclusive) or a pool of hot desks (capacity N).
@@ -60,6 +62,7 @@ model Booking {
   exclusive          Boolean
   status             BookingStatus @default(HELD)
   holdExpiresAt      DateTime?     @db.Timestamptz(3)
+  amountCents        Int           @default(0)
   paymentId          String?       @unique
   /// Provider timestamp of the last payment event applied; older events are stale.
   paymentLastEventAt DateTime?     @db.Timestamptz(3)
@@ -90,7 +93,7 @@ model IdempotencyKey {
 /// Every payment webhook received, by provider event id; the outcome records what was done with it.
 model PaymentEvent {
   id                String              @id
-  paymentId         String
+  paymentId         String?
   type              String
   providerCreatedAt DateTime            @db.Timestamptz(3)
   receivedAt        DateTime            @default(now()) @db.Timestamptz(3)

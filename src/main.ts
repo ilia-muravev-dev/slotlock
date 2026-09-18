@@ -10,7 +10,7 @@ export async function createApp(config?: Config): Promise<NestFastifyApplication
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.forRoot(config),
     new FastifyAdapter({ trustProxy: true }),
-    { bufferLogs: true },
+    { bufferLogs: true, rawBody: true },
   );
   app.useLogger(app.get(Logger));
   app.useGlobalFilters(new HttpExceptionFilter(app.get(Logger)));

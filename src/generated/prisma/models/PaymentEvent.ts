@@ -155,7 +155,7 @@ export type PaymentEventGroupByArgs<ExtArgs extends runtime.Types.Extensions.Int
 
 export type PaymentEventGroupByOutputType = {
   id: string
-  paymentId: string
+  paymentId: string | null
   type: string
   providerCreatedAt: Date
   receivedAt: Date
@@ -185,7 +185,7 @@ export type PaymentEventWhereInput = {
   OR?: Prisma.PaymentEventWhereInput[]
   NOT?: Prisma.PaymentEventWhereInput | Prisma.PaymentEventWhereInput[]
   id?: Prisma.StringFilter<"PaymentEvent"> | string
-  paymentId?: Prisma.StringFilter<"PaymentEvent"> | string
+  paymentId?: Prisma.StringNullableFilter<"PaymentEvent"> | string | null
   type?: Prisma.StringFilter<"PaymentEvent"> | string
   providerCreatedAt?: Prisma.DateTimeFilter<"PaymentEvent"> | Date | string
   receivedAt?: Prisma.DateTimeFilter<"PaymentEvent"> | Date | string
@@ -194,7 +194,7 @@ export type PaymentEventWhereInput = {
 
 export type PaymentEventOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  paymentId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   providerCreatedAt?: Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
@@ -206,7 +206,7 @@ export type PaymentEventWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.PaymentEventWhereInput | Prisma.PaymentEventWhereInput[]
   OR?: Prisma.PaymentEventWhereInput[]
   NOT?: Prisma.PaymentEventWhereInput | Prisma.PaymentEventWhereInput[]
-  paymentId?: Prisma.StringFilter<"PaymentEvent"> | string
+  paymentId?: Prisma.StringNullableFilter<"PaymentEvent"> | string | null
   type?: Prisma.StringFilter<"PaymentEvent"> | string
   providerCreatedAt?: Prisma.DateTimeFilter<"PaymentEvent"> | Date | string
   receivedAt?: Prisma.DateTimeFilter<"PaymentEvent"> | Date | string
@@ -215,7 +215,7 @@ export type PaymentEventWhereUniqueInput = Prisma.AtLeast<{
 
 export type PaymentEventOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  paymentId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   providerCreatedAt?: Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
@@ -230,7 +230,7 @@ export type PaymentEventScalarWhereWithAggregatesInput = {
   OR?: Prisma.PaymentEventScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PaymentEventScalarWhereWithAggregatesInput | Prisma.PaymentEventScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"PaymentEvent"> | string
-  paymentId?: Prisma.StringWithAggregatesFilter<"PaymentEvent"> | string
+  paymentId?: Prisma.StringNullableWithAggregatesFilter<"PaymentEvent"> | string | null
   type?: Prisma.StringWithAggregatesFilter<"PaymentEvent"> | string
   providerCreatedAt?: Prisma.DateTimeWithAggregatesFilter<"PaymentEvent"> | Date | string
   receivedAt?: Prisma.DateTimeWithAggregatesFilter<"PaymentEvent"> | Date | string
@@ -239,7 +239,7 @@ export type PaymentEventScalarWhereWithAggregatesInput = {
 
 export type PaymentEventCreateInput = {
   id: string
-  paymentId: string
+  paymentId?: string | null
   type: string
   providerCreatedAt: Date | string
   receivedAt?: Date | string
@@ -248,7 +248,7 @@ export type PaymentEventCreateInput = {
 
 export type PaymentEventUncheckedCreateInput = {
   id: string
-  paymentId: string
+  paymentId?: string | null
   type: string
   providerCreatedAt: Date | string
   receivedAt?: Date | string
@@ -257,7 +257,7 @@ export type PaymentEventUncheckedCreateInput = {
 
 export type PaymentEventUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentId?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   providerCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -266,7 +266,7 @@ export type PaymentEventUpdateInput = {
 
 export type PaymentEventUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentId?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   providerCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -275,7 +275,7 @@ export type PaymentEventUncheckedUpdateInput = {
 
 export type PaymentEventCreateManyInput = {
   id: string
-  paymentId: string
+  paymentId?: string | null
   type: string
   providerCreatedAt: Date | string
   receivedAt?: Date | string
@@ -284,7 +284,7 @@ export type PaymentEventCreateManyInput = {
 
 export type PaymentEventUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentId?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   providerCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -293,7 +293,7 @@ export type PaymentEventUpdateManyMutationInput = {
 
 export type PaymentEventUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentId?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   providerCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -376,7 +376,7 @@ export type $PaymentEventPayload<ExtArgs extends runtime.Types.Extensions.Intern
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    paymentId: string
+    paymentId: string | null
     type: string
     providerCreatedAt: Date
     receivedAt: Date

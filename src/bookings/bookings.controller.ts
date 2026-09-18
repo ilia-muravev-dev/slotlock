@@ -19,7 +19,12 @@ import {
 } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { IdempotencyInterceptor } from '../idempotency/idempotency.interceptor';
-import { type BookingOut, type CreateBooking, createBookingSchema } from './bookings.dto';
+import {
+  type BookingOut,
+  type CreateBooking,
+  type CreatedBooking,
+  createBookingSchema,
+} from './bookings.dto';
 import { BookingsService } from './bookings.service';
 
 @ApiTags('bookings')
@@ -47,7 +52,7 @@ export class BookingsController {
   create(
     @Headers('x-user-id') userId: string,
     @Body(new ZodValidationPipe(createBookingSchema)) body: CreateBooking,
-  ): Promise<BookingOut> {
+  ): Promise<CreatedBooking> {
     return this.bookings.create(userId, body);
   }
 

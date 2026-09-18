@@ -4,6 +4,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { CONFIG, type Config } from './config';
 import { ConfigModule } from './config.module';
 import { HealthController } from './health/health.controller';
+import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ResourcesModule } from './resources/resources.module';
 
@@ -26,6 +27,7 @@ export class AppModule {
           }),
         }),
         PrismaModule,
+        PaymentsModule,
         ResourcesModule,
         BookingsModule,
       ],

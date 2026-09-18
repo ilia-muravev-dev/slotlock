@@ -39,7 +39,9 @@ export const PaymentEventOutcome = {
   APPLIED: 'APPLIED',
   STALE: 'STALE',
   DUPLICATE: 'DUPLICATE',
-  ORPHANED: 'ORPHANED'
+  ORPHANED: 'ORPHANED',
+  IGNORED: 'IGNORED',
+  UNKNOWN: 'UNKNOWN'
 } as const
 
 export type PaymentEventOutcome = (typeof PaymentEventOutcome)[keyof typeof PaymentEventOutcome]

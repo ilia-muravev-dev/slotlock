@@ -29,6 +29,7 @@ const schema = z
       .optional()
       .transform((v) => (v ? v : undefined)),
     STRIPE_WEBHOOK_SECRET: z.string().min(8).default('whsec_slotlock_dev'),
+    PAYMENT_CURRENCY: z.string().length(3).toLowerCase().default('usd'),
   })
   .refine((c) => !(c.NODE_ENV === 'production' && c.BOOKING_STRATEGY === 'naive'), {
     message: 'BOOKING_STRATEGY=naive double-books by design and is refused in production',

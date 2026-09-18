@@ -1,4 +1,6 @@
 import {
+  BadGatewayException,
+  BadRequestException,
   ConflictException,
   HttpException,
   NotFoundException,
@@ -50,6 +52,22 @@ export class ResourceNotFoundError extends NotFoundException {
 export class BookingNotFoundError extends NotFoundException {
   constructor(id: string) {
     super({ code: 'booking_not_found', message: `booking ${id} not found` });
+  }
+}
+
+export class InvalidSignatureError extends BadRequestException {
+  constructor(reason: string) {
+    super({ code: 'invalid_signature', message: `webhook signature rejected: ${reason}` });
+  }
+}
+
+/** The PSP did not answer; the hold was released so a retry can reserve again. */
+export class PaymentProviderError extends BadGatewayException {
+  constructor(cause: unknown) {
+    super({
+      code: 'payment_provider_unavailable',
+      message: `payment provider failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+    });
   }
 }
 

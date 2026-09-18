@@ -27,5 +27,11 @@ export interface BookingOut {
   endsAt: string;
   status: 'HELD' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
   holdExpiresAt: string | null;
+  amountCents: number;
   paymentId: string | null;
+}
+
+/** The 201 body: the booking plus what the client needs to pay for it. */
+export interface CreatedBooking extends BookingOut {
+  payment: { provider: 'stripe' | 'fake'; id: string; clientSecret: string | null };
 }

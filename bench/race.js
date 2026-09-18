@@ -68,7 +68,7 @@ export default function () {
 
 export function handleSummary(data) {
   const m = data.metrics;
-  const v = (name, key) => (m[name] && m[name].values ? m[name].values[key] : undefined);
+  const v = (name, key) => m[name]?.values?.[key];
   const line = [
     `requests=${v('http_reqs', 'count')}`,
     `rps=${(v('http_reqs', 'rate') || 0).toFixed(1)}`,

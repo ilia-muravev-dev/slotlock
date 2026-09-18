@@ -20,8 +20,17 @@ export async function createApp(config?: Config): Promise<NestFastifyApplication
     app,
     new DocumentBuilder()
       .setTitle('slotlock')
-      .setDescription('A reservation API that cannot double-book.')
+      .setDescription(
+        'A reservation API that cannot double-book. Rooms are exclusive, desk pools have a ' +
+          'capacity; a booking is HELD while the customer pays, CONFIRMED by the payment ' +
+          'webhook, or EXPIRED by the worker. Every POST /bookings needs an Idempotency-Key.',
+      )
       .setVersion('0.1.0')
+      .addTag('resources', 'Rooms, desk pools and their availability')
+      .addTag('bookings', 'Holds, confirmations, cancellations')
+      .addTag('payments', 'Webhooks from the payment provider')
+      .addTag('fake-psp', 'The in-repo payment provider, for demos and tests')
+      .addTag('meta', 'Health and the active strategy')
       .build(),
   );
   SwaggerModule.setup('docs', app, document, { jsonDocumentUrl: 'openapi.json' });

@@ -1,6 +1,7 @@
 import { Body, Controller, HttpCode, Inject, NotFoundException, Param, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
+import { jsonSchema } from '../common/openapi';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { type FakeOutcome, FakePaymentProvider, type SignedEvent } from './fake.provider';
 import { PAYMENT_PROVIDER, type PaymentProvider } from './payment.provider';
@@ -37,7 +38,15 @@ export class FakePspController {
 
   @Post('payments/:paymentId/pay')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Simulate the customer paying (or the intent being canceled)' })
+  @ApiOperation({
+    summary: 'Simulate the customer paying (or the intent being canceled)',
+    description:
+      'Generates the events Stripe would send (created, processing, then the outcome) and delivers ' +
+      'them through the webhook endpoint in the requested order, with an optional duplicate. Only ' +
+      'with the fake provider; 404 under Stripe.',
+  })
+  @ApiBody({ schema: jsonSchema(paySchema), required: false })
+  @ApiOkResponse({ description: 'What each delivery did, in delivery order.' })
   async pay(
     @Param('paymentId') paymentId: string,
     @Body(new ZodValidationPipe(paySchema)) body: Pay,

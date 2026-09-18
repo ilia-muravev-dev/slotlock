@@ -9,7 +9,15 @@ up:
 
 # Stop everything
 down:
-    docker compose down
+    docker compose --profile app down
+
+# The whole stack in Docker: migrate + seed, API on :3000, worker (HOLD_TTL_SECONDS=20 to watch holds expire)
+app:
+    docker compose --profile app up --build -d --wait
+
+# Walk through a hold, a retry, a race, shuffled webhooks, a cancel and an expiry against :3000
+demo:
+    pnpm demo
 
 # Apply migrations to DATABASE_URL
 migrate:

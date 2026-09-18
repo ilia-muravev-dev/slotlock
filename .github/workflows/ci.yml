@@ -9,6 +9,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # prisma.config.ts resolves these even for `generate`; the tests use Testcontainers instead.
+  DATABASE_URL: postgresql://slotlock:slotlock@localhost:5432/slotlock
+  REDIS_URL: redis://localhost:6379/0
+
 jobs:
   check:
     name: Biome, tsc, Prisma, Vitest (unit + integration)

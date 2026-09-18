@@ -6,12 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!dist",
-      "!src/generated",
-      "!docs/benchmarks/*.json"
-    ]
+    "includes": ["**", "!dist", "!src/generated", "!docs/benchmarks/*.json"]
   },
   "formatter": {
     "enabled": true,

@@ -7,8 +7,6 @@ import { HoldExpiryService } from '../../src/bookings/holds/hold-expiry.service'
 import { NotificationSink } from '../../src/outbox/notification.sink';
 import { NotificationsProcessor } from '../../src/outbox/notifications.processor';
 import { OutboxRelay } from '../../src/outbox/outbox.relay';
-import type { FakePaymentProvider } from '../../src/payments/fake.provider';
-import { PAYMENT_PROVIDER } from '../../src/payments/payment.provider';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { NOTIFICATIONS_QUEUE, OUTBOX_QUEUE } from '../../src/queue/queue.module';
 import { createTestApp, createTestWorker, resetDatabase } from './harness';
@@ -18,7 +16,6 @@ const SLOT = { startsAt: '2026-10-01T09:00:00.000Z', endsAt: '2026-10-01T10:00:0
 let app: NestFastifyApplication;
 let worker: INestApplicationContext;
 let prisma: PrismaService;
-let psp: FakePaymentProvider;
 let notifications: Queue;
 let sink: NotificationSink;
 let relay: OutboxRelay;
@@ -34,7 +31,6 @@ beforeAll(async () => {
     HOLD_SWEEP_INTERVAL_MS: '600000',
   });
   prisma = app.get(PrismaService);
-  psp = app.get<FakePaymentProvider>(PAYMENT_PROVIDER);
   notifications = app.get<Queue>(getQueueToken(NOTIFICATIONS_QUEUE));
   sink = worker.get(NotificationSink);
   relay = worker.get(OutboxRelay);

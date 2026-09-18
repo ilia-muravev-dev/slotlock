@@ -26,5 +26,55 @@ services:
       timeout: 3s
       retries: 10
 
+  # `docker compose --profile app up --build --wait` — migrations, then the API and the worker.
+  migrate:
+    profiles: [app]
+    build:
+      context: .
+      target: build # keeps the Prisma CLI and tsx, which the runtime image does not carry
+    command: ["sh", "-c", "pnpm prisma migrate deploy && pnpm prisma:seed"]
+    environment: &app-env
+      DATABASE_URL: postgresql://slotlock:slotlock@db:5432/slotlock
+      SHADOW_DATABASE_URL: postgresql://slotlock:slotlock@db:5432/slotlock_shadow
+      REDIS_URL: redis://redis:6379/0
+      BOOKING_STRATEGY: ${BOOKING_STRATEGY:-advisory}
+      HOLD_TTL_SECONDS: ${HOLD_TTL_SECONDS:-600}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_slotlock_dev}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    profiles: [app]
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      <<: *app-env
+      PORT: "3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    profiles: [app]
+    build: .
+    command: ["node", "dist/worker.js"]
+    environment: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
 volumes:
   db-data:

@@ -20,5 +20,5 @@
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["src", "test", "bench", "prisma", "*.config.ts", "*.config.mts"]
+  "include": ["src", "test", "bench", "scripts", "prisma", "*.config.ts", "*.config.mts"]
 }

@@ -5,6 +5,7 @@ NestJS 12 on Fastify, Prisma 7 (pg driver adapter, generated client committed un
 Testcontainers, fast-check, k6.
 
 ## Commands
+
 - `just up` — Postgres + Redis; `just migrate`, `just seed`, `just api` (Swagger at /docs), `just worker`
 - `just app` — the whole stack in Docker; `just demo` — the walkthrough against :3000
 - `just check` — Biome, tsc, migration drift, Vitest unit + integration (integration tests start
@@ -17,6 +18,7 @@ Testcontainers, fast-check, k6.
   metadata Nest's DI needs; tests use unplugin-swc for the same reason
 
 ## Rules of the codebase
+
 - Every invariant has a test that fails without its mechanism (the race, idempotency, webhook
   ordering, hold expiry, exactly-once consumers). A change that weakens a mechanism must make
   that test red first.
@@ -35,6 +37,7 @@ Testcontainers, fast-check, k6.
   with `just bench-all` after touching a strategy and update the README's reading of them.
 
 ## Review checklist for PRs
+
 - Does the test prove the invariant, or only that the code ran?
 - Any new write path: is it inside the transaction with the outbox event?
 - Any new queue consumer: is it idempotent under duplicate delivery?

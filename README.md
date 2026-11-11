@@ -4,8 +4,8 @@
 
 [![CI](https://github.com/ilia-muravev-dev/slotlock/actions/workflows/ci.yml/badge.svg)](https://github.com/ilia-muravev-dev/slotlock/actions/workflows/ci.yml)
 
-Meeting rooms are exclusive; hot-desk pools have a capacity. A booking is *held* while the
-customer pays, *confirmed* by the payment webhook, or *expired* by a worker. Every way a second
+Meeting rooms are exclusive; hot-desk pools have a capacity. A booking is _held_ while the
+customer pays, _confirmed_ by the payment webhook, or _expired_ by a worker. Every way a second
 booking could sneak into the same seat is closed and proven: concurrent requests, retried
 requests, webhooks arriving out of order or twice, lost expiry jobs, duplicate queue deliveries.
 
@@ -17,14 +17,14 @@ against each and a verifier judges the database afterwards.
 
 2026-09-18T18:57:11.898Z, commit `2b1bbff`, Apple M1 Pro (8 cores, 16 GB), darwin arm64, Node v24.21.0, PostgreSQL 17.11 in Docker, pool size 20. 100 VUs for 20s per strategy, release ratio 0.8.
 
-| Strategy | req/s | p50 ms | p95 ms | p99 ms | 201 / 409 / other | retries | overlaps / over capacity | invariants |
-| --- | ---: | ---: | ---: | ---: | --- | ---: | --- | :---: |
-| `advisory` | 1416 | 66.6 | 92.6 | 138.0 | 1106 / 26359 / 0 | – | 0 / 0 | ✅ |
-| `for_update` | 1407 | 66.9 | 91.9 | 138.8 | 1062 / 26261 / 0 | – | 0 / 0 | ✅ |
-| `optimistic` | 1405 | 64.9 | 89.8 | 206.3 | 909 / 26499 / 34 | 1078 | 0 / 0 | ✅ |
-| `serializable` | 1508 | 60.0 | 80.7 | 174.4 | 981 / 28437 / 9 | 944 | 0 / 0 | ✅ |
-| `exclusion` | 1867 | 49.4 | 70.9 | 126.2 | 1019 / 35545 / 0 | 0 | 0 / 0 | ✅ |
-| `naive` | 1643 | 57.1 | 75.5 | 114.2 | 1070 / 30992 / 0 | – | 18 / 5 | ❌ |
+| Strategy       | req/s | p50 ms | p95 ms | p99 ms | 201 / 409 / other | retries | overlaps / over capacity | invariants |
+| -------------- | ----: | -----: | -----: | -----: | ----------------- | ------: | ------------------------ | :--------: |
+| `advisory`     |  1416 |   66.6 |   92.6 |  138.0 | 1106 / 26359 / 0  |       – | 0 / 0                    |     ✅     |
+| `for_update`   |  1407 |   66.9 |   91.9 |  138.8 | 1062 / 26261 / 0  |       – | 0 / 0                    |     ✅     |
+| `optimistic`   |  1405 |   64.9 |   89.8 |  206.3 | 909 / 26499 / 34  |    1078 | 0 / 0                    |     ✅     |
+| `serializable` |  1508 |   60.0 |   80.7 |  174.4 | 981 / 28437 / 9   |     944 | 0 / 0                    |     ✅     |
+| `exclusion`    |  1867 |   49.4 |   70.9 |  126.2 | 1019 / 35545 / 0  |       0 | 0 / 0                    |     ✅     |
+| `naive`        |  1643 |   57.1 |   75.5 |  114.2 | 1070 / 30992 / 0  |       – | 18 / 5                   |     ❌     |
 
 Written by `just bench-all` into [`docs/benchmarks/`](docs/benchmarks/README.md), never edited by
 hand; the per-strategy reports carry the full latency distribution and the run parameters.
@@ -41,12 +41,12 @@ What they say:
   the fact and try again — `optimistic` retried 1078 times and gave up
   34 times (503 `retry_exhausted`), `serializable` retried
   944 times and gave up 9 times. The optimistic
-  version lives on the *resource* row, so two bookings of different slots of the same room
+  version lives on the _resource_ row, so two bookings of different slots of the same room
   conflict with each other; a per-slot version would fix that and is left as the obvious next
   step.
 - **The exclusion constraint is the fastest and the least code, with two catches.** Its 409 path
   is a single `INSERT … ON CONFLICT DO NOTHING`; the others count first. But it cannot express
-  "at most N" (pools fall back to advisory), and a *plain* insert against it deadlocks under
+  "at most N" (pools fall back to advisory), and a _plain_ insert against it deadlocks under
   contention — [ADR 0001](docs/adr/0001-five-ways-to-serialise-a-booking.md) records how the
   first version of this repository found that out.
 - Latency here is dominated by 100 virtual users sharing a pool of 20 connections on one laptop;
@@ -54,14 +54,14 @@ What they say:
 
 ## What is proven, and where
 
-| Invariant | Mechanism | Proof |
-| --- | --- | --- |
-| A room never has two active bookings that overlap; a pool never exceeds its capacity | one of five reserve strategies, in the database | [`bookings.race.test.ts`](test/integration/bookings.race.test.ts): 50 concurrent requests for one slot → 1 × 201, 49 × 409, one row — for every strategy; 20 on a pool of 3 → exactly 3; the `naive` control double-books |
-| A retried request never creates a second booking | `Idempotency-Key` per user: in-flight → 409, done → stored answer replayed, different body → 422, 5xx → released ([ADR 0002](docs/adr/0002-idempotency-keys.md)) | [`idempotency.test.ts`](test/integration/idempotency.test.ts), including a gated first request with nine duplicates behind it |
-| Payment webhooks in any order, with duplicates, converge to one state | ordered by the provider's timestamp, deduplicated by event id, applied under a row lock, a state machine that never leaves CONFIRMED ([ADR 0003](docs/adr/0003-webhooks-ordered-by-provider-time.md)) | [`webhooks.test.ts`](test/integration/webhooks.test.ts): reversed, duplicated, three shuffled copies delivered concurrently |
-| An unpaid hold releases its seat even if its expiry job was lost | a delayed BullMQ job per hold plus a periodic sweeper; expiry is one guarded `UPDATE` judged by the database clock | [`holds.test.ts`](test/integration/holds.test.ts) |
-| Side effects happen exactly once per event, and never for a transaction that rolled back | transactional outbox, relay with `SKIP LOCKED`, consumer that claims the job id in a transaction ([ADR 0004](docs/adr/0004-outbox-and-an-idempotent-consumer.md)) | [`outbox.test.ts`](test/integration/outbox.test.ts) |
-| All of the above, in any interleaving | — | [`booking-sequences.property.test.ts`](test/integration/booking-sequences.property.test.ts): fast-check drives random sequences of book / replay / pay / cancel / expire / sweep against the real database and checks every invariant after every step |
+| Invariant                                                                                | Mechanism                                                                                                                                                                                             | Proof                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A room never has two active bookings that overlap; a pool never exceeds its capacity     | one of five reserve strategies, in the database                                                                                                                                                       | [`bookings.race.test.ts`](test/integration/bookings.race.test.ts): 50 concurrent requests for one slot → 1 × 201, 49 × 409, one row — for every strategy; 20 on a pool of 3 → exactly 3; the `naive` control double-books                              |
+| A retried request never creates a second booking                                         | `Idempotency-Key` per user: in-flight → 409, done → stored answer replayed, different body → 422, 5xx → released ([ADR 0002](docs/adr/0002-idempotency-keys.md))                                      | [`idempotency.test.ts`](test/integration/idempotency.test.ts), including a gated first request with nine duplicates behind it                                                                                                                          |
+| Payment webhooks in any order, with duplicates, converge to one state                    | ordered by the provider's timestamp, deduplicated by event id, applied under a row lock, a state machine that never leaves CONFIRMED ([ADR 0003](docs/adr/0003-webhooks-ordered-by-provider-time.md)) | [`webhooks.test.ts`](test/integration/webhooks.test.ts): reversed, duplicated, three shuffled copies delivered concurrently                                                                                                                            |
+| An unpaid hold releases its seat even if its expiry job was lost                         | a delayed BullMQ job per hold plus a periodic sweeper; expiry is one guarded `UPDATE` judged by the database clock                                                                                    | [`holds.test.ts`](test/integration/holds.test.ts)                                                                                                                                                                                                      |
+| Side effects happen exactly once per event, and never for a transaction that rolled back | transactional outbox, relay with `SKIP LOCKED`, consumer that claims the job id in a transaction ([ADR 0004](docs/adr/0004-outbox-and-an-idempotent-consumer.md))                                     | [`outbox.test.ts`](test/integration/outbox.test.ts)                                                                                                                                                                                                    |
+| All of the above, in any interleaving                                                    | —                                                                                                                                                                                                     | [`booking-sequences.property.test.ts`](test/integration/booking-sequences.property.test.ts): fast-check drives random sequences of book / replay / pay / cancel / expire / sweep against the real database and checks every invariant after every step |
 
 The integration tests start Postgres 17 and Redis 8 in Testcontainers and boot the API and the
 worker in-process; nothing is mocked below the HTTP layer.
@@ -82,14 +82,14 @@ DELETE /bookings/:id (owner) → CANCELLED; a paid booking also requests a refun
 worker: expire-hold jobs, the sweeper, the outbox relay, the notifications consumer
 ```
 
-| Status | Meaning |
-| --- | --- |
-| 201 | held; pay within `HOLD_TTL_SECONDS` |
-| 409 `no_capacity` | someone else has the seat for that time |
-| 409 `request_in_flight` | the same key is still being processed — retry later with the same key |
-| 422 `idempotency_key_reused` | the same key with a different request |
-| 400 | validation, missing `Idempotency-Key` or `X-User-Id` |
-| 503 `retry_exhausted` | a retrying strategy gave up under contention; retry with backoff |
+| Status                       | Meaning                                                               |
+| ---------------------------- | --------------------------------------------------------------------- |
+| 201                          | held; pay within `HOLD_TTL_SECONDS`                                   |
+| 409 `no_capacity`            | someone else has the seat for that time                               |
+| 409 `request_in_flight`      | the same key is still being processed — retry later with the same key |
+| 422 `idempotency_key_reused` | the same key with a different request                                 |
+| 400                          | validation, missing `Idempotency-Key` or `X-User-Id`                  |
+| 503 `retry_exhausted`        | a retrying strategy gave up under contention; retry with backoff      |
 
 Swagger UI at `/docs`, the document at `/openapi.json`. There is no authentication: the demo
 identifies users by the `X-User-Id` header, which is the one thing you would not ship.

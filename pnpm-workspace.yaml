@@ -3,7 +3,7 @@ allowBuilds:
   "@prisma/engines": true
   prisma: true
   esbuild: true
-  '@scarf/scarf': false  # telemetry, not wanted
+  "@scarf/scarf": false # telemetry, not wanted
   msgpackr-extract: true
   cpu-features: true
   protobufjs: true

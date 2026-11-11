@@ -6,10 +6,10 @@ updates:
       interval: monthly
     groups:
       dependencies:
-        patterns: ['*']
+        patterns: ["*"]
     ignore:
-      - dependency-name: '*'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -20,4 +20,4 @@ updates:
       interval: monthly
     ignore:
       - dependency-name: node
-        update-types: ['version-update:semver-major']
+        update-types: ["version-update:semver-major"]

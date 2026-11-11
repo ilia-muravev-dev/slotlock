@@ -8,13 +8,13 @@ Two requests for the same room and time can both pass a "is it free?" check and 
 fix has to be in the database, and there are several correct ways to do it, each with a different
 cost under contention and different failure behaviour:
 
-| Strategy | How | Trade-off |
-| --- | --- | --- |
-| `advisory` | `pg_advisory_xact_lock(hash(resourceId))`, then count and insert | serialises per resource; no schema changes; the lock is invisible to the schema |
-| `for_update` | lock the resource row with `SELECT … FOR UPDATE` | same effect, visible in the plan; needs the row to exist |
-| `optimistic` | count and insert, then bump `Resource.version` with `WHERE version = seen`; retry on 0 rows | no waiting; retries under contention |
-| `serializable` | the same transaction at `SERIALIZABLE`; retry on 40001 | the textbook answer; Postgres detects the conflict instead of the code |
-| `exclusion` | `EXCLUDE USING gist (resourceId WITH =, tstzrange WITH &&)`; the insert fails with 23P01 | the database enforces non-overlap for exclusive resources; cannot express "at most N" |
+| Strategy       | How                                                                                         | Trade-off                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `advisory`     | `pg_advisory_xact_lock(hash(resourceId))`, then count and insert                            | serialises per resource; no schema changes; the lock is invisible to the schema       |
+| `for_update`   | lock the resource row with `SELECT … FOR UPDATE`                                            | same effect, visible in the plan; needs the row to exist                              |
+| `optimistic`   | count and insert, then bump `Resource.version` with `WHERE version = seen`; retry on 0 rows | no waiting; retries under contention                                                  |
+| `serializable` | the same transaction at `SERIALIZABLE`; retry on 40001                                      | the textbook answer; Postgres detects the conflict instead of the code                |
+| `exclusion`    | `EXCLUDE USING gist (resourceId WITH =, tstzrange WITH &&)`; the insert fails with 23P01    | the database enforces non-overlap for exclusive resources; cannot express "at most N" |
 
 ## Decision
 
@@ -31,7 +31,7 @@ locking" costs in correctness, not just in latency. The configuration refuses it
 ## Consequences
 
 - The exclusion strategy must insert with `ON CONFLICT ON CONSTRAINT … DO NOTHING`. A plain
-  insert is checked *after* its index entry is written, so N concurrent inserts for one slot find
+  insert is checked _after_ its index entry is written, so N concurrent inserts for one slot find
   each other's uncommitted rows, wait on each other, and are unpicked by the deadlock detector one
   `deadlock_timeout` (1 s) at a time — the first version of this repository answered the 50-way
   race with no 201 at all. Speculative insertion pre-checks before writing, so a committed winner
